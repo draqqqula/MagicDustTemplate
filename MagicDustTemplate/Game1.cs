@@ -1,6 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+﻿using MagicDustLibrary.Logic;
+using MagicDustLibrary.Network;
+using MagicDustLibrary.Organization;
+using MagicDustTemplate.Levels;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.IO;
+using System.Linq;
 
 namespace MagicDustTemplate
 {
@@ -8,6 +14,7 @@ namespace MagicDustTemplate
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        private MagicGameApplication _app;
 
         public Game1()
         {
@@ -18,7 +25,20 @@ namespace MagicDustTemplate
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            GameClient cleint = CreateClient();
+
+            //Creating new application instance
+            _app = new MagicGameApplication(cleint, this);
+
+            //Loading level under certain name
+            _app.LevelManager.LoadAs<TestLevel>("test");
+
+            //Launching level under this name
+            _app.LevelManager.Launch("test", true);
+
+            //_app.LevelManager.LoadAs<ViewerLevel>("connection");
+            //_app.LevelManager.Launch("connection", new LevelArgs($"{File.ReadLines("ServerIPAdress.txt").First()}:7878"), true);
+
 
             base.Initialize();
         }
@@ -26,16 +46,12 @@ namespace MagicDustTemplate
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
         }
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
-            // TODO: Add your update logic here
+            //Updating application
+            _app.Update(gameTime.ElapsedGameTime, Window);
 
             base.Update(gameTime);
         }
@@ -43,10 +59,33 @@ namespace MagicDustTemplate
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+            _spriteBatch.Begin();
+            //Drawing application
+            _app.Draw(_spriteBatch);
 
-            // TODO: Add your drawing code here
-
+            _spriteBatch.End();
             base.Draw(gameTime);
+        }
+
+        private GameClient CreateClient()
+        {
+            //Creating new client instance
+            //Since it will be our main client we don't have to feature remote IP adress
+            return new GameClient(Window.ClientBounds, CreateControls(), GameClient.GameLanguage.English);
+        }
+
+        private GameControls CreateControls()
+        {
+            //Here we create controls for our client
+            var controls = new GameControls();
+            controls.ChangeControl(Control.left, () => Keyboard.GetState().IsKeyDown(Keys.A));
+            controls.ChangeControl(Control.right, () => Keyboard.GetState().IsKeyDown(Keys.D));
+            controls.ChangeControl(Control.jump, () => Keyboard.GetState().IsKeyDown(Keys.Space));
+            controls.ChangeControl(Control.dash, () => Keyboard.GetState().IsKeyDown(Keys.LeftShift));
+            controls.ChangeControl(Control.pause, () => Keyboard.GetState().IsKeyDown(Keys.Escape));
+            controls.ChangeControl(Control.lookUp, () => Keyboard.GetState().IsKeyDown(Keys.W));
+            controls.ChangeControl(Control.lookDown, () => Keyboard.GetState().IsKeyDown(Keys.S));
+            return controls;
         }
     }
 }

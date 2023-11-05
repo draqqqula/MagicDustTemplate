@@ -1,0 +1,3 @@
+﻿--.---.--.--
+Write here Your IP adress.
+To launch both server and client on my own computer I use my RAdmin adress
